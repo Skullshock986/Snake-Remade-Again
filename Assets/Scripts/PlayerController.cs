@@ -244,6 +244,18 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    IEnumerator TargetChange()
+    {
+        while (PV.IsMine)
+        {
+            if (Input.GetKeyDown(KeyCode.P))
+            {
+                TargetIncrement();
+            }
+            yield return 0;
+        }
+    }
+
     IEnumerator Movement()
     {
         while (PV.IsMine)
@@ -285,17 +297,5 @@ public class PlayerController : MonoBehaviour
             image.color = tempColour;
             yield return new WaitForSeconds(0.03f);
         }
-    }
-
-    IEnumerator TargetChange()
-    {
-        while (PV.IsMine)
-        {
-            if (Input.GetKeyDown(KeyCode.P))
-            {
-                TargetIncrement();
-            }
-        }
-        yield return 0;
     }
 }
