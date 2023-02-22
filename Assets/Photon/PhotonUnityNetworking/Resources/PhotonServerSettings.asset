@@ -44,6 +44,8 @@ MonoBehaviour:
   - RPC_Die
   - RPC_Grow
   - RPC_RandomPos
+  - RPC_CallToPlayer
+  - RPC_returnToPlayer
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

@@ -6142,6 +6142,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   PVListScript: {fileID: 7830358631400388555}
+  PlayerIndex: 0
+  tempValue: 0
   ScoreText: {fileID: 2833756336813269310}
   ui: {fileID: 5075026316606372722}
   TargetBGs:
@@ -6159,9 +6161,9 @@ MonoBehaviour:
   IsSpeedable: 0
   FoodCount: 0
   IncreaseAmt: 1
+  Kills: 0
   AreaWallsObj: {fileID: 8319660006367140976}
   gridArea: {fileID: 0}
-  PlayerPVs: []
 --- !u!114 &7830358631400388555
 MonoBehaviour:
   m_ObjectHideFlags: 0

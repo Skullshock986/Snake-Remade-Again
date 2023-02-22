@@ -12,6 +12,9 @@ public class PlayerController : MonoBehaviour
     public static PlayerController instance;
     [SerializeField] PlayerPVScript PVListScript;
 
+    public int PlayerIndex;
+    public int tempValue;
+
     [SerializeField] TMP_Text ScoreText;
     [SerializeField] GameObject ui;
 
@@ -30,6 +33,7 @@ public class PlayerController : MonoBehaviour
     public bool IsSpeedable;
     public int FoodCount;
     public int IncreaseAmt;
+    public int Kills;
 
     private bool IsPP1Active;
     private bool IsPP2Active;
@@ -57,6 +61,8 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
+        PlayerIndex = 0;
+
         DirectionIndicator = "None";
 
         _segments = new List<Transform>();
@@ -75,6 +81,7 @@ public class PlayerController : MonoBehaviour
 
         TargetIncrement();
         StartCoroutine("TargetChange");
+        StartCoroutine("PlayerTarget");
     }
 
     #endregion
@@ -125,6 +132,31 @@ public class PlayerController : MonoBehaviour
 
 
         repeat_time = 0.1f;
+    }
+
+    [PunRPC]
+    private void RPC_CallToPlayer(PhotonView _pv, int _c)
+    {
+        int sentInt = 0;
+        switch (_c)
+        {
+            case 3:
+                sentInt = (PlayerPVScript.Instances[PlayerIndex] == _pv) ? -10 : 0;
+                break;
+            case 2:
+                sentInt = FoodCount;
+                break;
+            case 1:
+                sentInt = Kills;
+                break;
+        }
+        PV.RPC("RPC_ReturnToPlayer", _pv.Controller, sentInt);
+    }
+
+    [PunRPC]
+    private void RPC_returnToPlayer(PhotonView _pv, int _c)
+    {
+        tempValue = _c;
     }
 
     #endregion
@@ -270,21 +302,55 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    /*IEnumerator PlayerTarget()
+    IEnumerator PlayerTarget()
     {
         while (PV.IsMine)
         {
+            List<PhotonView> PVInstances = PlayerPVScript.Instances;
+            int MaxValue = 0;
             switch (BGListPointer)
             {
-                case 3:
-                    foreach (PhotonView pv in PlayerPVScript.Instances)
+                case 0: //Random Player
+                    PhotonView ChosenPV = PVInstances[Random.Range(0, PlayerPVScript.Instances.Count)];
+                    break;
+                case 1: //Max Score
+                    foreach (PhotonView pv in PVInstances)
                     {
-
+                        PV.RPC("RPC_CallToPlayer", pv.Controller, PV, 1);
+                        if (tempValue > MaxValue)
+                        {
+                            MaxValue = tempValue;
+                            PlayerIndex = PVInstances.IndexOf(pv);
+                        }
                     }
-
+                    break;
+                case 2: //Max Kills
+                    foreach (PhotonView pv in PVInstances)
+                    {
+                        PV.RPC("RPC_CallToPlayer", pv.Controller, PV, 2);
+                        if (tempValue > MaxValue)
+                        {
+                            MaxValue = tempValue;
+                            PlayerIndex = PVInstances.IndexOf(pv);
+                        }
+                    }
+                    break;
+                case 3: //Attacker
+                    foreach (PhotonView pv in PVInstances)
+                    {
+                        PV.RPC("RPC_CallToPlayer", pv.Controller, PV, 3);
+                        if (tempValue == -10)
+                        {
+                            PlayerIndex = PVInstances.IndexOf(pv);
+                        }
+                    }
+                    break;
             }
+            Debug.LogError(PVInstances);
+            Debug.LogError(PlayerIndex);
+            yield return new WaitForSeconds(1.0f);
         }
-    }*/
+    }
 
     IEnumerator Movement()
     {
