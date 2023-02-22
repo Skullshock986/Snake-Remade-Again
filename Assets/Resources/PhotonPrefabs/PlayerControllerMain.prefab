@@ -5951,6 +5951,7 @@ GameObject:
   - component: {fileID: 9139419724292317398}
   - component: {fileID: 6953216911886873025}
   - component: {fileID: 326181553563273864}
+  - component: {fileID: 7830358631400388555}
   m_Layer: 0
   m_Name: PlayerController
   m_TagString: Snake
@@ -6140,6 +6141,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 244403fda5b482c4dbec70748c5a8b10, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  PVListScript: {fileID: 7830358631400388555}
   ScoreText: {fileID: 2833756336813269310}
   ui: {fileID: 5075026316606372722}
   TargetBGs:
@@ -6159,6 +6161,19 @@ MonoBehaviour:
   IncreaseAmt: 1
   AreaWallsObj: {fileID: 8319660006367140976}
   gridArea: {fileID: 0}
+  PlayerPVs: []
+--- !u!114 &7830358631400388555
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2802500077438263548}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 646ebb3f9b6a6cf49a4ff26db4a0485b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &3470709064174367523
 GameObject:
   m_ObjectHideFlags: 0

@@ -10,6 +10,7 @@ using UnityEngine.UI;
 public class PlayerController : MonoBehaviour
 {
     public static PlayerController instance;
+    [SerializeField] PlayerPVScript PVListScript;
 
     [SerializeField] TMP_Text ScoreText;
     [SerializeField] GameObject ui;
@@ -38,7 +39,6 @@ public class PlayerController : MonoBehaviour
     [SerializeField] BoxCollider2D gridArea;
 
     PhotonView PV;
-    [SerializeField] PhotonView[] PlayerPVs;
 
     #region UNITY
 
@@ -47,8 +47,6 @@ public class PlayerController : MonoBehaviour
         instance = this;
         PV = GetComponent<PhotonView>();
         gridArea = AreaWallsObj.GetComponentInChildren<BoxCollider2D>();
-
-        PlayerPVs = FindObjectsOfType<PhotonView>();
     }
 
     void Start()
@@ -279,7 +277,10 @@ public class PlayerController : MonoBehaviour
             switch (BGListPointer)
             {
                 case 3:
+                    foreach (PhotonView pv in PlayerPVScript.Instances)
+                    {
 
+                    }
 
             }
         }
