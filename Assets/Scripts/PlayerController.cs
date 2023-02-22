@@ -38,12 +38,17 @@ public class PlayerController : MonoBehaviour
     [SerializeField] BoxCollider2D gridArea;
 
     PhotonView PV;
+    [SerializeField] PhotonView[] PlayerPVs;
+
+    #region UNITY
 
     void Awake()
     {
         instance = this;
         PV = GetComponent<PhotonView>();
         gridArea = AreaWallsObj.GetComponentInChildren<BoxCollider2D>();
+
+        PlayerPVs = FindObjectsOfType<PhotonView>();
     }
 
     void Start()
@@ -73,6 +78,10 @@ public class PlayerController : MonoBehaviour
         TargetIncrement();
         StartCoroutine("TargetChange");
     }
+
+    #endregion
+
+    #region PUNRPC
 
     [PunRPC]
     private void RPC_Grow()
@@ -119,6 +128,10 @@ public class PlayerController : MonoBehaviour
 
         repeat_time = 0.1f;
     }
+
+    #endregion
+
+    #region FUNCTIONS
 
     private void ColourReset()
     {
@@ -212,6 +225,9 @@ public class PlayerController : MonoBehaviour
         tempImage.color = tempColor;
     }
 
+    #endregion
+
+    #region COROUTINES
     IEnumerator Direction()
     {
         while (PV.IsMine)
@@ -256,6 +272,19 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    /*IEnumerator PlayerTarget()
+    {
+        while (PV.IsMine)
+        {
+            switch (BGListPointer)
+            {
+                case 3:
+
+
+            }
+        }
+    }*/
+
     IEnumerator Movement()
     {
         while (PV.IsMine)
@@ -298,4 +327,6 @@ public class PlayerController : MonoBehaviour
             yield return new WaitForSeconds(0.03f);
         }
     }
+
+    #endregion
 }
