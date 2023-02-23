@@ -6142,6 +6142,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   PVListScript: {fileID: 7830358631400388555}
+  PVInstances: []
   PlayerIndex: 0
   tempValue: 0
   ScoreText: {fileID: 2833756336813269310}
@@ -6176,6 +6177,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 646ebb3f9b6a6cf49a4ff26db4a0485b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  InstancesCopy: []
 --- !u!1 &3470709064174367523
 GameObject:
   m_ObjectHideFlags: 0

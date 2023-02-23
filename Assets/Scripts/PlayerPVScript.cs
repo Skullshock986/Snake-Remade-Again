@@ -9,6 +9,7 @@ public class PlayerPVScript : MonoBehaviour
     PhotonView photonView;
     public static List<PhotonView> Instances = new List<PhotonView>();
     public static PlayerPVScript LocalInstance;
+    public List<PhotonView> InstancesCopy;
 
     void Awake()
     {
@@ -56,5 +57,10 @@ public class PlayerPVScript : MonoBehaviour
         }
 
         return null;
+    }
+
+    public static List<PhotonView> GetPlayerViewList()
+    {
+        return Instances;
     }
 }
