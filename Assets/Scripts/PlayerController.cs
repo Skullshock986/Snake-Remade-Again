@@ -15,6 +15,9 @@ public class PlayerController : MonoBehaviour
 
     [SerializeField] int PlayerIndex;
     [SerializeField] int tempValue;
+    [SerializeField] Vector3 TargetPosition;
+    [SerializeField] GameObject BorderPrefab;
+    [SerializeField] GameObject ControllerMain;
 
     [SerializeField] TMP_Text ScoreText;
     [SerializeField] GameObject ui;
@@ -147,6 +150,7 @@ public class PlayerController : MonoBehaviour
         }
 
         int sentInt = 0;
+        Vector3 PlayerPosition = ControllerMain.transform.position;
         switch (_c)
         {
             case 3:
@@ -159,12 +163,14 @@ public class PlayerController : MonoBehaviour
             case 1:
                 sentInt = Kills;
                 break;
+            case 0:
+                break;
         }
-        PV.RPC("RPC_ReturnToPlayer", RpcTarget.All, ReturnID, sentInt);
+        PV.RPC("RPC_ReturnToPlayer", RpcTarget.All, ReturnID, sentInt, PlayerPosition);
     }
 
     [PunRPC]
-    private void RPC_ReturnToPlayer(int pvID, int _c)
+    private void RPC_ReturnToPlayer(int pvID, int _c, Vector3 _v)
     {
         if (!PV.IsMine)
             return;
@@ -174,6 +180,7 @@ public class PlayerController : MonoBehaviour
             return;
         }
         tempValue = _c;
+        TargetPosition = _v;
     }
 
     #endregion
@@ -325,7 +332,7 @@ public class PlayerController : MonoBehaviour
         {
             PVInstances = PlayerPVScript.GetPlayerViewList();
             Debug.LogError(PVInstances);
-            int MaxValue = 0;
+            int MaxValue = -1;
             if (PVInstances.Count > 1)
             {
                 switch (BGListPointer)
@@ -336,12 +343,13 @@ public class PlayerController : MonoBehaviour
                         {
                             PlayerIndex = PVInstances[Random.Range(0, PlayerPVScript.Instances.Count)].ViewID;
                         }
+                        PV.RPC("RPC_CallToPlayer", RpcTarget.All, PlayerIndex, PV.ViewID, 0);
                         break;
                     case 1: //Max Kills
                         foreach (PhotonView pv in PVInstances)
                         {
                             PV.RPC("RPC_CallToPlayer", RpcTarget.All, pv.ViewID, PV.ViewID, 1);
-                            if (tempValue > MaxValue)
+                            if (tempValue > MaxValue && !pv.IsMine)
                             {
                                 MaxValue = tempValue;
                                 PlayerIndex = pv.ViewID;
@@ -352,7 +360,7 @@ public class PlayerController : MonoBehaviour
                         foreach (PhotonView pv in PVInstances)
                         {
                             PV.RPC("RPC_CallToPlayer", RpcTarget.All, pv.ViewID, PV.ViewID, 2);
-                            if (tempValue > MaxValue)
+                            if (tempValue > MaxValue && !pv.IsMine)
                             {
                                 MaxValue = tempValue;
                                 PlayerIndex = pv.ViewID;
@@ -363,7 +371,7 @@ public class PlayerController : MonoBehaviour
                         foreach (PhotonView pv in PVInstances)
                         {
                             PV.RPC("RPC_CallToPlayer", RpcTarget.All, pv.ViewID, PV.ViewID, 3);
-                            if (tempValue == -10)
+                            if (tempValue == -10 && !pv.IsMine)
                             {
                                 PlayerIndex = pv.ViewID;
                             }
@@ -371,6 +379,14 @@ public class PlayerController : MonoBehaviour
                         break;
                 }
                 Debug.LogError(PlayerIndex);
+
+                if (!BorderPrefab.activeInHierarchy) { BorderPrefab.SetActive(true);}
+                Debug.LogError(TargetPosition);
+                /*BorderPrefab.transform.position = new Vector3(
+                    TargetTransform.position.x,
+                    TargetTransform.position.y,
+                    -0.01f
+                );*/
             }
             yield return new WaitForSeconds(1.0f);
         }
