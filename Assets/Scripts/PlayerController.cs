@@ -12,12 +12,19 @@ public class PlayerController : MonoBehaviour
     public static PlayerController instance;
     [SerializeField] PlayerPVScript PVListScript;
     public List<PhotonView> PVInstances;
+    public Dictionary<int, Transform> TransformDict;
 
-    [SerializeField] int PlayerIndex;
+    [SerializeField] int PlayerID;
+    [SerializeField] int MyID;
     [SerializeField] int tempValue;
     [SerializeField] Vector3 TargetPosition;
+    [SerializeField] int sentInt;
+
+    [SerializeField] Vector3 PlayerPosition;
     [SerializeField] GameObject BorderPrefab;
     [SerializeField] GameObject ControllerMain;
+
+    public int checkID;
 
     [SerializeField] TMP_Text ScoreText;
     [SerializeField] GameObject ui;
@@ -28,7 +35,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] Image PU1;
     [SerializeField] Image PU2;
     [SerializeField] Image PU3;
-     
+
     [SerializeField] Vector2 _direction = Vector2.right;
     private List<Transform> _segments;
     [SerializeField] string DirectionIndicator;
@@ -55,6 +62,7 @@ public class PlayerController : MonoBehaviour
         instance = this;
         PV = GetComponent<PhotonView>();
         gridArea = AreaWallsObj.GetComponentInChildren<BoxCollider2D>();
+        PlayerPosition = ControllerMain.transform.position;
     }
 
     void Start()
@@ -65,7 +73,8 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        PlayerIndex = 0;
+        PlayerID = 0;
+        MyID = PV.ViewID;
 
         DirectionIndicator = "None";
 
@@ -138,49 +147,70 @@ public class PlayerController : MonoBehaviour
         repeat_time = 0.1f;
     }
 
-    [PunRPC]
-    private void RPC_CallToPlayer(int CallID, int ReturnID, int _c)
+    private void CallToPlayer(int CallID, int ReturnID, int _c)
     {
-        if (!PV.IsMine)
-            return;
-
-        if (PV.ViewID != CallID)
+        if (_c > 0)
         {
-            return;
+            int rID = ReturnID;
+            sentInt = 0;
+            if (_c == 3)
+            {
+                this.PVInstances = PlayerPVScript.GetPlayerViewList();
+                this.sentInt = (this.PVInstances[PlayerID].ViewID == CallID) ? -10 : 0;
+            }
+            else if (_c == 2)
+            {
+                Debug.LogError("sentInt = " + FoodCount);
+                this.sentInt = this.FoodCount;
+            }
+            else if (_c == 1)
+            {
+                Debug.LogError("sentInt = " + Kills);
+                this.sentInt = this.Kills;
+            }
+            PVInstances = PlayerPVScript.GetPlayerViewList();
         }
 
-        int sentInt = 0;
-        Vector3 PlayerPosition = ControllerMain.transform.position;
-        switch (_c)
+        foreach (PhotonView pv in PVInstances)
         {
-            case 3:
-                PVInstances = PlayerPVScript.GetPlayerViewList();
-                sentInt = (PVInstances[PlayerIndex].ViewID == CallID) ? -10 : 0;
-                break;
-            case 2:
-                sentInt = FoodCount;
-                break;
-            case 1:
-                sentInt = Kills;
-                break;
-            case 0:
-                break;
+            if (pv.ViewID == ReturnID)
+            {
+                Player player = pv.Controller;
+                pv.RPC("RPC_ReturnToPlayer", player, ReturnID, sentInt);
+            }
         }
-        PV.RPC("RPC_ReturnToPlayer", RpcTarget.All, ReturnID, sentInt, PlayerPosition);
     }
 
     [PunRPC]
-    private void RPC_ReturnToPlayer(int pvID, int _c, Vector3 _v)
+    private void RPC_CallToPlayer(int CallID, int ReturnID, int _c)
     {
-        if (!PV.IsMine)
-            return;
-
-        if (pvID != PV.ViewID)
+        checkID = PV.ViewID;
+        if (this.PV.IsMine)
+        {
+            CallToPlayer(CallID, ReturnID, _c);
+        }
+        else
         {
             return;
         }
-        tempValue = _c;
-        TargetPosition = _v;
+    }
+
+    [PunRPC]
+    private void RPC_ReturnToPlayer(int pvID, int _c)
+    {
+        if (this.PV.IsMine)
+        {
+            ReturnToPlayer(_c);
+        }
+        else
+        {
+            return;
+        }
+    }
+
+    private void ReturnToPlayer(int _c)
+    {
+        this.tempValue = _c;
     }
 
     #endregion
@@ -331,66 +361,84 @@ public class PlayerController : MonoBehaviour
         while (PV.IsMine)
         {
             PVInstances = PlayerPVScript.GetPlayerViewList();
-            Debug.LogError(PVInstances);
-            int MaxValue = -1;
-            if (PVInstances.Count > 1)
+            int MaxValue = 0;
+            if (PVInstances.Count > 1)  
             {
                 switch (BGListPointer)
                 {
                     case 0: //Random Player
-                        PlayerIndex = PVInstances[Random.Range(0, PlayerPVScript.Instances.Count)].ViewID;
-                        while (PlayerIndex == PV.ViewID)
+                        PlayerID = PVInstances[Random.Range(0, PlayerPVScript.Instances.Count)].ViewID;
+                        while (PlayerID == PV.ViewID)
                         {
-                            PlayerIndex = PVInstances[Random.Range(0, PlayerPVScript.Instances.Count)].ViewID;
+                            PlayerID = PVInstances[Random.Range(0, PlayerPVScript.Instances.Count)].ViewID;
                         }
-                        PV.RPC("RPC_CallToPlayer", RpcTarget.All, PlayerIndex, PV.ViewID, 0);
                         break;
                     case 1: //Max Kills
                         foreach (PhotonView pv in PVInstances)
                         {
-                            PV.RPC("RPC_CallToPlayer", RpcTarget.All, pv.ViewID, PV.ViewID, 1);
-                            if (tempValue > MaxValue && !pv.IsMine)
+                            if (!pv.IsMine)
                             {
-                                MaxValue = tempValue;
-                                PlayerIndex = pv.ViewID;
+                                Player player = pv.Controller;
+                                pv.RPC("RPC_CallToPlayer", player, pv.ViewID, MyID, 1);
+                                if (tempValue > MaxValue)
+                                {
+                                    MaxValue = tempValue;
+                                    PlayerID = pv.ViewID;
+                                }
                             }
                         }
                         break;
                     case 2: //Max Score 
                         foreach (PhotonView pv in PVInstances)
                         {
-                            PV.RPC("RPC_CallToPlayer", RpcTarget.All, pv.ViewID, PV.ViewID, 2);
-                            if (tempValue > MaxValue && !pv.IsMine)
+                            if (!pv.IsMine)
                             {
-                                MaxValue = tempValue;
-                                PlayerIndex = pv.ViewID;
+                                Player player = pv.Controller;
+                                pv.RPC("RPC_CallToPlayer", player, pv.ViewID, MyID, 2);
+                                if (this.tempValue > MaxValue)
+                                {
+                                    MaxValue = this.tempValue;
+                                    PlayerID = pv.ViewID;
+                                }
                             }
                         }
                         break;
                     case 3: //Attacker
                         foreach (PhotonView pv in PVInstances)
                         {
-                            PV.RPC("RPC_CallToPlayer", RpcTarget.All, pv.ViewID, PV.ViewID, 3);
-                            if (tempValue == -10 && !pv.IsMine)
+                            if (!pv.IsMine)
                             {
-                                PlayerIndex = pv.ViewID;
+                                Player player = pv.Controller;
+                                pv.RPC("RPC_CallToPlayer", player, pv.ViewID, MyID, 3);
+                                if (tempValue == -10)
+                                {
+                                    PlayerID = pv.ViewID;
+                                }
                             }
                         }
                         break;
                 }
-                Debug.LogError(PlayerIndex);
+                Debug.LogError(PlayerID);
 
-                if (!BorderPrefab.activeInHierarchy) { BorderPrefab.SetActive(true);}
+                TransformDict = PlayerPVScript.GetPlayerTransformDict();
+                Debug.LogError(TransformDict);
+                TargetPosition = TransformDict[PlayerID].position;
+
                 Debug.LogError(TargetPosition);
-                /*BorderPrefab.transform.position = new Vector3(
-                    TargetTransform.position.x,
-                    TargetTransform.position.y,
-                    -0.01f
-                );*/
+                if (!BorderPrefab.activeInHierarchy) { BorderPrefab.SetActive(true); }
+                BorderPrefab.transform.position = new Vector3(
+                    TargetPosition.x,
+                    TargetPosition.y,
+                    1.0f
+                );
+            }
+            else
+            {
+                BorderPrefab.SetActive(false);
             }
             yield return new WaitForSeconds(1.0f);
         }
-            
+
     }
 
     IEnumerator Movement()

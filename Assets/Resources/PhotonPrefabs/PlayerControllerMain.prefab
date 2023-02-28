@@ -6654,11 +6654,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   PVListScript: {fileID: 7830358631400388555}
   PVInstances: []
-  PlayerIndex: 0
+  PlayerID: 0
+  MyID: 0
   tempValue: 0
+  tempPosition: {x: 0, y: 0, z: 0}
   TargetPosition: {x: 0, y: 0, z: 0}
+  sentInt: 0
+  PlayerPosition: {x: 0, y: 0, z: 0}
   BorderPrefab: {fileID: 2387247134445243751}
   ControllerMain: {fileID: 8125825012847267581}
+  checkID: 0
   ScoreText: {fileID: 2833756336813269310}
   ui: {fileID: 5075026316606372722}
   TargetBGs:

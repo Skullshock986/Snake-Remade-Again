@@ -7,7 +7,10 @@ using Photon.Realtime;
 public class PlayerPVScript : MonoBehaviour
 {
     PhotonView photonView;
+    Transform ParentT;
     public static List<PhotonView> Instances = new List<PhotonView>();
+    public static List<Transform> TransformInstances = new List<Transform>();
+    public static Dictionary<int, Transform> TransformDictionary = new Dictionary<int, Transform>();
     public static PlayerPVScript LocalInstance;
     public List<PhotonView> InstancesCopy;
 
@@ -15,7 +18,12 @@ public class PlayerPVScript : MonoBehaviour
     {
         photonView = gameObject.GetComponent<PhotonView>();
 
+        ParentT = this.gameObject.transform.parent;
+
         Instances.Add(photonView);
+        TransformInstances.Add(ParentT);
+
+        TransformDictionary.Add(photonView.ViewID, ParentT);
 
         if (photonView.IsMine)
         {
@@ -62,5 +70,10 @@ public class PlayerPVScript : MonoBehaviour
     public static List<PhotonView> GetPlayerViewList()
     {
         return Instances;
+    }
+
+    public static Dictionary<int, Transform> GetPlayerTransformDict()
+    {
+        return TransformDictionary;
     }
 }
