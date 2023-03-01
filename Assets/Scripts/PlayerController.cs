@@ -19,6 +19,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] int tempValue;
     [SerializeField] Vector3 TargetPosition;
     [SerializeField] int sentInt;
+    [SerializeField] bool IsChecked;
 
     [SerializeField] Vector3 PlayerPosition;
     [SerializeField] GameObject BorderPrefab;
@@ -168,15 +169,14 @@ public class PlayerController : MonoBehaviour
                 Debug.LogError("sentInt = " + Kills);
                 this.sentInt = this.Kills;
             }
-            PVInstances = PlayerPVScript.GetPlayerViewList();
         }
-
-        foreach (PhotonView pv in PVInstances)
+        PVInstances = PlayerPVScript.GetPlayerViewList();
+        foreach (PhotonView _pv in PVInstances)
         {
-            if (pv.ViewID == ReturnID)
+            if (_pv.ViewID == ReturnID)
             {
-                Player player = pv.Controller;
-                pv.RPC("RPC_ReturnToPlayer", player, ReturnID, sentInt);
+                Player player = _pv.Controller;
+                _pv.RPC("RPC_ReturnToPlayer", player, ReturnID, sentInt);
             }
         }
     }
@@ -211,6 +211,7 @@ public class PlayerController : MonoBehaviour
     private void ReturnToPlayer(int _c)
     {
         this.tempValue = _c;
+        this.IsChecked = true;
     }
 
     #endregion
@@ -361,8 +362,7 @@ public class PlayerController : MonoBehaviour
         while (PV.IsMine)
         {
             PVInstances = PlayerPVScript.GetPlayerViewList();
-            int MaxValue = 0;
-            if (PVInstances.Count > 1)  
+            if (PVInstances.Count > 1)
             {
                 switch (BGListPointer)
                 {
@@ -374,12 +374,14 @@ public class PlayerController : MonoBehaviour
                         }
                         break;
                     case 1: //Max Kills
+                        int MaxValue = 0;
                         foreach (PhotonView pv in PVInstances)
                         {
                             if (!pv.IsMine)
                             {
                                 Player player = pv.Controller;
                                 pv.RPC("RPC_CallToPlayer", player, pv.ViewID, MyID, 1);
+                                yield return new WaitUntil(() => IsChecked);
                                 if (tempValue > MaxValue)
                                 {
                                     MaxValue = tempValue;
@@ -389,15 +391,18 @@ public class PlayerController : MonoBehaviour
                         }
                         break;
                     case 2: //Max Score 
+                        int MaxValue2 = 0;
                         foreach (PhotonView pv in PVInstances)
                         {
                             if (!pv.IsMine)
                             {
                                 Player player = pv.Controller;
+                                IsChecked = false;
                                 pv.RPC("RPC_CallToPlayer", player, pv.ViewID, MyID, 2);
-                                if (this.tempValue > MaxValue)
+                                yield return new WaitUntil(() => IsChecked);
+                                if (this.tempValue > MaxValue2)
                                 {
-                                    MaxValue = this.tempValue;
+                                    MaxValue2 = this.tempValue;
                                     PlayerID = pv.ViewID;
                                 }
                             }
@@ -409,7 +414,9 @@ public class PlayerController : MonoBehaviour
                             if (!pv.IsMine)
                             {
                                 Player player = pv.Controller;
+                                IsChecked = false;
                                 pv.RPC("RPC_CallToPlayer", player, pv.ViewID, MyID, 3);
+                                yield return new WaitUntil(() => IsChecked);
                                 if (tempValue == -10)
                                 {
                                     PlayerID = pv.ViewID;
