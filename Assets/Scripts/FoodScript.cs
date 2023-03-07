@@ -15,8 +15,8 @@ public class FoodScript : MonoBehaviour
 
     void Awake()
     {
+        SetWallsObj();
         PV = GetComponent<PhotonView>();
-        gridArea = AreaWallsObj.GetComponentInChildren<BoxCollider2D>();
         RandomPos();
     }
 
@@ -24,6 +24,13 @@ public class FoodScript : MonoBehaviour
     {
         
     }
+
+    public void SetWallsObj()
+    {
+        AreaWallsObj = GameObject.FindWithTag("ObstacleW");
+        gridArea = AreaWallsObj.GetComponentInChildren<BoxCollider2D>();
+    }
+
     public void RandomPos()
     {
         Bounds bounds = gridArea.bounds;
@@ -38,6 +45,8 @@ public class FoodScript : MonoBehaviour
         Debug.Log("collided");
         if (other.tag == "Snake")
         {
+            if (AreaWallsObj.activeSelf == false)
+                SetWallsObj();
             RandomPos();
         }
     }

@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f07cd7c77e927544885a6e6ba16f0fd, type: 3}
+  m_Name: Add 5 Length
+  m_EditorClassIdentifier: 
+  Name: Add 5 Length
+  Description: Adds 5 segments to an Opponent
+  ActivateTime: 0
+  Visual: {fileID: 0}
+  Value: 5

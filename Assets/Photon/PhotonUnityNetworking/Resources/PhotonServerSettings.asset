@@ -49,6 +49,9 @@ MonoBehaviour:
   - RPC_ReturnToPlayer
   - RPC_GetTransform
   - RPC_TransformToPlayer
+  - RPC_Boost
+  - RPC_WallsChange
+  - RPC_ScoreChange
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1
