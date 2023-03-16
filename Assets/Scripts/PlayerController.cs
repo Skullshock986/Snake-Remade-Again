@@ -19,6 +19,14 @@ public class PlayerController : MonoBehaviour
     [SerializeField] GameObject food;
     [SerializeField] FoodScript foodScript;
 
+    [SerializeField] GameObject Main;
+    [SerializeField] PlayerControllerMain mainScript;
+
+    [SerializeField] bool IsLost;
+    [SerializeField] bool IsWon;
+
+    [SerializeField] int TargettedBy;
+
     public int PlayerID;
     [SerializeField] int MyID;
     [SerializeField] int tempValue;
@@ -33,7 +41,15 @@ public class PlayerController : MonoBehaviour
     public int checkID;
 
     [SerializeField] TMP_Text ScoreText;
-    [SerializeField] GameObject ui;
+    [SerializeField] TMP_Text KillsText;
+    [SerializeField] TMP_Text PlaceText;
+    [SerializeField] TMP_Text PlayerNumText;
+    [SerializeField] GameObject uiCanvas;
+    [SerializeField] GameObject KOIndicator;
+    [SerializeField] GameObject KOImage;
+    [SerializeField] GameObject WinImage;
+
+    [SerializeField] GameObject[] UIParts;
 
     [SerializeField] List<Image> TargetBGs;
     private int BGListPointer;
@@ -50,23 +66,15 @@ public class PlayerController : MonoBehaviour
     public bool IsSpeedable;
     public int FoodCount;
     public int IncreaseAmt;
+
     public int Kills;
+    public int Place;
 
     [SerializeField] bool IsPP1Active;
     [SerializeField] bool IsPP2Active;
     [SerializeField] bool IsPP3Active;
 
     [SerializeField] GameObject AreaWallsObj;
-    [SerializeField] BoxCollider2D gridArea;
-
-    [SerializeField] GameObject NoWallsObj;
-    [SerializeField] BoxCollider2D gridArea2;
-
-    [SerializeField] GameObject SmallWallsObj;
-    [SerializeField] BoxCollider2D gridArea3;
-
-    [SerializeField] GameObject HardWallsObj;
-    [SerializeField] BoxCollider2D gridArea4;
 
     public List<GameObject> WallsList;
 
@@ -78,8 +86,8 @@ public class PlayerController : MonoBehaviour
     {
         instance = this;
         PV = GetComponent<PhotonView>();
-        gridArea = AreaWallsObj.GetComponentInChildren<BoxCollider2D>();
         foodScript = food.GetComponent<FoodScript>();
+        mainScript = Main.GetComponent<PlayerControllerMain>();
         PlayerPosition = ControllerMain.transform.position;
     }
 
@@ -87,9 +95,13 @@ public class PlayerController : MonoBehaviour
     {
         if (!PV.IsMine)
         {
-            Destroy(ui);
+            Destroy(uiCanvas);
             return;
         }
+
+        IsLost = false;
+        Kills = 0;
+        Place = PhotonNetwork.CurrentRoom.PlayerCount;
 
         PlayerID = 0;
         MyID = PV.ViewID;
@@ -122,42 +134,48 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (!PV.IsMine)
+        if (!PV.IsMine || IsLost)
         {
             return;
         }
 
-        if (Input.GetKeyDown(KeyCode.I) && ItemsScript.heldPU1 != -1 && IsPP1Active)
+        if (Input.GetKeyDown(KeyCode.U) && ItemsScript.heldPU1 == -1 && IsPP1Active)
         {
             ItemsScript.StartPickup(1);
             FoodCount -= 10;
+            LengthChange(-10);
             PUCheck();
+            ScoreText.text = FoodCount.ToString("00");
         }
-        else if (Input.GetKeyDown(KeyCode.I) && ItemsScript.heldPU1 == -1)
+        else if (Input.GetKeyDown(KeyCode.U) && ItemsScript.heldPU1 != -1)
         {
             ItemsScript.ActivatePU1();
             ColourReset(1);
         }
 
-        if (Input.GetKeyDown(KeyCode.O) && ItemsScript.heldPU2 != -1)
+        if (Input.GetKeyDown(KeyCode.I) && ItemsScript.heldPU2 == -1 && IsPP2Active)
         {
             ItemsScript.StartPickup(2);
             FoodCount -= 15;
+            LengthChange(-15);
             PUCheck();
+            ScoreText.text = FoodCount.ToString("00");
         }
-        else if (Input.GetKeyDown(KeyCode.O) && ItemsScript.heldPU2 == -1)
+        else if (Input.GetKeyDown(KeyCode.I) && ItemsScript.heldPU2 != -1)
         {
             ItemsScript.ActivatePU2();
             ColourReset(2);
         }
 
-        if (Input.GetKeyDown(KeyCode.P) && ItemsScript.heldPU3 != -1)
+        if (Input.GetKeyDown(KeyCode.O) && ItemsScript.heldPU3 == -1 && IsPP3Active)
         {
             ItemsScript.StartPickup(3);
+            LengthChange(-20);
             FoodCount -= 20;
             PUCheck();
+            ScoreText.text = FoodCount.ToString("00");
         }
-        else if (Input.GetKeyDown(KeyCode.P) && ItemsScript.heldPU3 == -1)
+        else if (Input.GetKeyDown(KeyCode.O) && ItemsScript.heldPU3 != -1)
         {
             ItemsScript.ActivatePU2();
             ColourReset(3);
@@ -191,6 +209,22 @@ public class PlayerController : MonoBehaviour
         if (!PV.IsMine)
             return;
 
+        for (int i = 1; i < _segments.Count; i++)
+        {
+            GameObject s = _segments[1].gameObject;
+            PhotonView sPV = s.GetPhotonView();
+            if (sPV.IsMine)
+            {
+                _segments.Remove(s.transform);
+                PhotonNetwork.Destroy(s);
+            }
+            else
+            {
+                continue;
+            }
+        }
+
+        /*
         int count = _segments.Count;
         for (int i = 1; i < count; i++)
         {
@@ -209,9 +243,7 @@ public class PlayerController : MonoBehaviour
         FoodCount = 0;
         ScoreText.text = FoodCount.ToString("00");
         RandomPosSnake();
-
-
-        repeat_time = 0.1f;
+        repeat_time = 0.1f;*/
     }
 
     [PunRPC]
@@ -243,11 +275,12 @@ public class PlayerController : MonoBehaviour
 
 
     [PunRPC]
-    private void RPC_Boost(float time, float mult)
+    private void RPC_Boost(float time, float mult, int ID)
     {
         if (this.PV.IsMine)
         {
             StartCoroutine(Boost(time, mult));
+            TargettedBy = ID;
         }
         else
         {
@@ -256,11 +289,12 @@ public class PlayerController : MonoBehaviour
     }
 
     [PunRPC]
-    private void RPC_WallsChange(float time, float type)
+    private void RPC_WallsChange(float time, float type, int ID)
     {
         if (this.PV.IsMine)
         {
             StartCoroutine(WallsChange(time, type));
+            TargettedBy = ID;
         }
         else
         {
@@ -269,11 +303,12 @@ public class PlayerController : MonoBehaviour
     }
 
     [PunRPC]
-    private void RPC_ScoreChange(float Value)
+    private void RPC_ScoreChange(float Value, int ID)
     {
         if (this.PV.IsMine)
         {
             ScoreChange((int)Value);
+            TargettedBy = ID;
         }
         else
         {
@@ -282,16 +317,38 @@ public class PlayerController : MonoBehaviour
     }
 
     [PunRPC]
-    private void RPC_LengthChange(float Value)
+    private void RPC_LengthChange(float Value, int ID)
     {
         if (this.PV.IsMine)
         {
             LengthChange((int)Value);
+            TargettedBy = ID;
         }
         else
         {
             return;
         }
+    }
+
+    [PunRPC]
+    private void RPC_PlayerDied(int ID)
+    {
+        if (this.IsLost) { return; }
+        else if (this.PV.IsMine)
+        {
+            PlayerDied(ID);
+        }
+        else
+        {
+            return;
+        }
+
+    }
+
+    [PunRPC]
+    private void RPC_ShowKO()
+    {
+        KOIndicator.SetActive(true);
     }
 
     #endregion
@@ -323,6 +380,52 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    private void Spectate()
+    {
+        SetUIActive(2);
+    }
+
+    private void Die()
+    {
+        this.IsLost = true;
+        PVInstances = PlayerPVScript.GetPlayerViewList();
+        foreach (PhotonView pv in PVInstances)
+        {
+            if (pv.ViewID != PV.ViewID)
+            {
+                Player player = pv.Controller;
+                pv.RPC("RPC_PlayerDied", player, TargettedBy);
+            }
+        }
+
+        SetUIActive(1);
+        KOImage.SetActive(true);
+        KillsText.text = Kills.ToString("00");
+        PlaceText.text = Place.ToString("00");
+        PlayerNumText.text = PhotonNetwork.CurrentRoom.PlayerCount.ToString("00");
+    }
+
+    private void Win()
+    {
+        StopAllCoroutines();
+        //PV.RPC("RPC_ShowWin", RpcTarget.All);
+        this.IsWon = true;
+        SetUIActive(1);
+        WinImage.SetActive(true);
+        KillsText.text = Kills.ToString("00");
+        PlaceText.text = Place.ToString("00");
+        PlayerNumText.text = PhotonNetwork.CurrentRoom.PlayerCount.ToString("00");
+    }
+
+    public void SetUIActive(int index) 
+    {
+        foreach (GameObject ui in UIParts)
+        {
+            ui.SetActive(false);
+        }
+        UIParts[index].SetActive(true);
+    }
+
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (!PV.IsMine)
@@ -339,14 +442,56 @@ public class PlayerController : MonoBehaviour
         }
         else if ((other.tag == "Walls" || other.tag == "ObstacleS") && Waiting == false)
         {
-            StopCoroutine("Movement");
-            PV.RPC("RPC_Die", RpcTarget.All);
-            StartCoroutine("Movement");
+            while (!IsLost)
+            {
+                PV.RPC("RPC_ShowKO", RpcTarget.All);
+                StopAllCoroutines();
+                Die();
+                PV.RPC("RPC_Die", RpcTarget.All);
+            }
 
-            for (int i = 0; i < 4; i++)
+            for (int i = 1; i < 4; i++)
             {
                 ColourReset(i);
             }
+        }
+        else if (other.tag == "NoWalls" && Waiting == false)
+        {
+            Debug.Log(other.gameObject.name.ToString());
+            StopCoroutine("Movement");
+
+            switch (other.gameObject.name)
+            {
+                case "DWall":
+                    this.transform.position = new Vector3(
+                    this.transform.position.x,
+                    this.transform.position.y + 27.0f,
+                    0.0f
+                    );
+                    break;
+                case "LWall":
+                    this.transform.position = new Vector3(
+                    this.transform.position.x + 43.0f,
+                    this.transform.position.y,
+                    0.0f
+                    );
+                    break;
+                case "UWall":
+                    this.transform.position = new Vector3(
+                    this.transform.position.x,
+                    this.transform.position.y - 27.0f,
+                    0.0f
+                    );
+                    break;
+                case "RWall":
+                    this.transform.position = new Vector3(
+                    this.transform.position.x - 43.0f,
+                    this.transform.position.y,
+                    0.0f
+                    );
+                    break;
+            }
+            StartCoroutine("Movement");
         }
     }
 
@@ -357,12 +502,13 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        Bounds bounds = gridArea.bounds;
+        Bounds bounds = foodScript.gridArea.bounds;
 
         float x = Random.Range(bounds.min.x, bounds.max.x);
         float y = Random.Range(bounds.min.y, bounds.max.y);
 
         this.transform.position = new Vector3(Mathf.Round(x), Mathf.Round(y), 0.0f);
+        while (foodScript.HasInner == true && foodScript.innerArea.bounds.Contains(this.transform.position)) { this.transform.position = new Vector3(Mathf.Round(x), Mathf.Round(y), 0.0f); }
     }
 
     private void PUCheck()
@@ -377,7 +523,7 @@ public class PlayerController : MonoBehaviour
             StartCoroutine("PUActive", PU1);
             IsPP1Active = true;
         }
-        else if(FoodCount < 10 && IsPP1Active == false)
+        else if(FoodCount < 10)
         {
             ColourReset(1);
         }
@@ -386,7 +532,7 @@ public class PlayerController : MonoBehaviour
             StartCoroutine("PUActive", PU2);
             IsPP2Active = true;
         }
-        else if (FoodCount < 15 && IsPP2Active == false)
+        else if (FoodCount < 15)
         {
             ColourReset(2);
         }
@@ -395,7 +541,7 @@ public class PlayerController : MonoBehaviour
             StartCoroutine("PUActive", PU3);
             IsPP3Active = true;
         }
-        else if (FoodCount < 20 && IsPP3Active == false)
+        else if (FoodCount < 20)
         {
             ColourReset(3);
         }
@@ -422,20 +568,26 @@ public class PlayerController : MonoBehaviour
         {
             int rID = ReturnID;
             sentInt = 0;
-            if (_c == 3)
+            if (!this.IsLost)
             {
-                this.PVInstances = PlayerPVScript.GetPlayerViewList();
-                this.sentInt = (this.PVInstances[PlayerID].ViewID == CallID) ? -10 : 0;
+                if (_c == 3)
+                {
+                    this.PVInstances = PlayerPVScript.GetPlayerViewList();
+                    this.sentInt = (this.PVInstances[PlayerID].ViewID == CallID) ? -10 : 0;
+                }
+                else if (_c == 2)
+                {
+                    this.sentInt = this.FoodCount;
+                }
+                else if (_c == 1)
+                {
+                    Debug.LogError("sentInt = " + Kills);
+                    this.sentInt = this.Kills;
+                }
             }
-            else if (_c == 2)
+            else
             {
-                Debug.LogError("sentInt = " + FoodCount);
-                this.sentInt = this.FoodCount;
-            }
-            else if (_c == 1)
-            {
-                Debug.LogError("sentInt = " + Kills);
-                this.sentInt = this.Kills;
+                sentInt = -1;
             }
         }
         PVInstances = PlayerPVScript.GetPlayerViewList();
@@ -458,14 +610,16 @@ public class PlayerController : MonoBehaviour
     public void ScoreChange(int value)
     {
         FoodCount -= value;
+        ScoreText.text = FoodCount.ToString("00");
         PUCheck();
     }
+
     public void LengthChange(int value)
     {
         switch (value)
         {
             case int n when (n < 0):
-                for (int i = 0; i < value; i++)
+                for (int i = 0; i < Mathf.Abs(value); i++)
                 {
                     int count = _segments.Count;
                     GameObject s = _segments[count - 1].gameObject;
@@ -480,6 +634,7 @@ public class PlayerController : MonoBehaviour
                         continue;
                     }
                 }
+                repeat_time = 0.1f / Mathf.Pow(1.25f, (FoodCount / 5));
                 break;
             case int n when (n > 0):
                 for (int i = 0; i < value; i++)
@@ -494,29 +649,17 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-
-
-    IEnumerator WallsChange(float time, float type)
+    private void PlayerDied(int ID)
     {
-        WallsList[0].SetActive(false);
-        WallsList[(int)type].SetActive(true);
-        foodScript.SetWallsObj();
-        foodScript.RandomPos();
-
-        yield return new WaitForSeconds(time);
-
-        WallsList[(int)type].SetActive(false);
-        WallsList[0].SetActive(true);
-        foodScript.SetWallsObj();
-        foodScript.RandomPos();
-    }
-
-    IEnumerator Boost(float time, float mult)
-    {
-        repeat_time = (1.0f / Mathf.Pow(1.25f, (FoodCount / 5))) * mult;
-        yield return new WaitForSeconds(time);
-        repeat_time = 1.0f / Mathf.Pow(1.25f, (FoodCount / 5));
-
+        Place -= 1;
+        if (ID == PV.ViewID)
+        {
+            Kills += 1;
+        }
+        if(Place == 1)
+        {
+            Win();
+        }
     }
 
     #endregion
@@ -634,13 +777,14 @@ public class PlayerController : MonoBehaviour
                         }
                         break;
                 }
-                Debug.LogError(PlayerID);
 
                 TransformDict = PlayerPVScript.GetPlayerTransformDict();
-                Debug.LogError(TransformDict);
+                for(int i = 0; i < PVInstances.Count; i++)
+                {
+                    Debug.LogError("Player " + PVInstances[i].ViewID + " At transform " +  TransformDict[PVInstances[i].ViewID].position);
+                }
                 TargetPosition = TransformDict[PlayerID].position;
 
-                Debug.LogError(TargetPosition);
                 if (!BorderPrefab.activeInHierarchy) { BorderPrefab.SetActive(true); }
                 BorderPrefab.transform.position = new Vector3(
                     TargetPosition.x,
@@ -659,7 +803,7 @@ public class PlayerController : MonoBehaviour
 
     IEnumerator Movement()
     {
-        while (PV.IsMine)
+        while (PV.IsMine && (!IsLost || !IsWon))
         {
             for (int i = _segments.Count - 1; i > 0; i--)
             {
@@ -698,6 +842,29 @@ public class PlayerController : MonoBehaviour
             image.color = tempColour;
             yield return new WaitForSeconds(0.03f);
         }
+    }
+
+    public IEnumerator WallsChange(float time, float type)
+    {
+        WallsList[0].SetActive(false);
+        WallsList[(int)type].SetActive(true);
+        foodScript.SetWallsObj();
+        foodScript.RandomPos();
+
+        yield return new WaitForSeconds(time);
+
+        WallsList[(int)type].SetActive(false);
+        WallsList[0].SetActive(true);
+        foodScript.SetWallsObj();
+        foodScript.RandomPos();
+    }
+
+    public IEnumerator Boost(float time, float mult)
+    {
+        repeat_time = (0.1f / Mathf.Pow(1.25f, (FoodCount / 5))) / mult;
+        yield return new WaitForSeconds(time);
+        repeat_time = 0.1f / Mathf.Pow(1.25f, (FoodCount / 5));
+
     }
 
     #endregion

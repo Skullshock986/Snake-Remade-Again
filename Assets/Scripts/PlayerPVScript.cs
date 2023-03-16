@@ -34,6 +34,7 @@ public class PlayerPVScript : MonoBehaviour
     void OnDestroy()
     {
         Instances.Remove(photonView);
+        TransformDictionary.Remove(photonView.ViewID);
     }
 
     public PhotonView GetPhotonView()

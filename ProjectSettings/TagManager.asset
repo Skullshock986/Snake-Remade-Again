@@ -12,6 +12,7 @@ TagManager:
   - Obstacle
   - Snake
   - NoWalls
+  - IArea
   layers:
   - Default
   - TransparentFX

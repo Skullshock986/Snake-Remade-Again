@@ -15,5 +15,5 @@ MonoBehaviour:
   Name: No Walls
   Description: Removes walls for the Player
   ActivateTime: 15
-  Visual: {fileID: 0}
+  Visual: {fileID: 21300000, guid: 6b160ca4ffb768a45a265cfcaaa0ae42, type: 3}
   Value: 1

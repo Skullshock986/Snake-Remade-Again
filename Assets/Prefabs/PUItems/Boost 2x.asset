@@ -15,5 +15,5 @@ MonoBehaviour:
   Name: Boost 2x
   Description: Doubles the speed of an opponent's snake for 10s
   ActivateTime: 5
-  Visual: {fileID: 0}
+  Visual: {fileID: 21300000, guid: d48e52a923a79fd428be3fb20f9b7311, type: 3}
   Value: 2

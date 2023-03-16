@@ -106,7 +106,7 @@ public class Launcher : MonoBehaviourPunCallbacks  // Extending the class from M
     public void StartGame()
     {
         // Load the game Scene
-        PhotonNetwork.LoadLevel(1);
+        PhotonNetwork.LoadLevel(2);
     }
 
     // Calls when a player leaves a room (for the player only) (Button Trigger)

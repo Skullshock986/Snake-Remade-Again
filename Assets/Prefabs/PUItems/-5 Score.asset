@@ -15,5 +15,5 @@ MonoBehaviour:
   Name: -5 Score
   Description: -5 an opponents FoodCount
   ActivateTime: 0
-  Visual: {fileID: 0}
+  Visual: {fileID: 21300000, guid: a5fafab6643384c45a6f3809a47775f4, type: 3}
   Value: -5

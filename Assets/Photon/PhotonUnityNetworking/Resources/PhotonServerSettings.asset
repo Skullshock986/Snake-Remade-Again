@@ -52,6 +52,9 @@ MonoBehaviour:
   - RPC_Boost
   - RPC_WallsChange
   - RPC_ScoreChange
+  - RPC_LengthChange
+  - RPC_PlayerDied
+  - RPC_ShowKO
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

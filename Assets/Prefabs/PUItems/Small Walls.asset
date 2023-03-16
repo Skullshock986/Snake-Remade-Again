@@ -15,5 +15,5 @@ MonoBehaviour:
   Name: Hard Walls
   Description: Spawns Smaller Walls for an opponent
   ActivateTime: 15
-  Visual: {fileID: 0}
+  Visual: {fileID: 21300000, guid: aa6b612d670bbd94589928b79aeff9ed, type: 3}
   Value: 2

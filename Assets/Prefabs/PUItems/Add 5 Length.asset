@@ -15,5 +15,5 @@ MonoBehaviour:
   Name: Add 5 Length
   Description: Adds 5 segments to an Opponent
   ActivateTime: 0
-  Visual: {fileID: 0}
+  Visual: {fileID: 21300000, guid: 03df720d1b4a413438e33d1444e018e0, type: 3}
   Value: 5

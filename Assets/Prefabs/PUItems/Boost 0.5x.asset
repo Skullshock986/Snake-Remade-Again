@@ -15,5 +15,5 @@ MonoBehaviour:
   Name: Boost 0.5x
   Description: Halves the speed of the player's snake for 10s
   ActivateTime: 10
-  Visual: {fileID: 0}
+  Visual: {fileID: 21300000, guid: d0d13fbded49cd3409da0910ec30fac2, type: 3}
   Value: 0.5

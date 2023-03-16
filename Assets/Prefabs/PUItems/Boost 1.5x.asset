@@ -15,5 +15,5 @@ MonoBehaviour:
   Name: Boost 1.5x
   Description: x1.5 the speed of an opponent's snake for 10s
   ActivateTime: 10
-  Visual: {fileID: 0}
+  Visual: {fileID: 21300000, guid: cd0c51d15a0e1e74aa497423c00c0738, type: 3}
   Value: 1.5

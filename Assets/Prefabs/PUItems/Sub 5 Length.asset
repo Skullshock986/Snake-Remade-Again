@@ -15,5 +15,5 @@ MonoBehaviour:
   Name: Sub 5 Length
   Description: Removes 5 segments from the Player
   ActivateTime: 0
-  Visual: {fileID: 0}
+  Visual: {fileID: 21300000, guid: 2113725b3490f9b4b95414c607637f48, type: 3}
   Value: -5

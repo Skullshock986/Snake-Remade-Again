@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
-public class PlayerControllerMain : MonoBehaviour
+public class PlayerControllerMain : MonoBehaviourPunCallbacks
 {
     public static PlayerControllerMain Instance;
     GameObject Player;
@@ -26,5 +27,18 @@ public class PlayerControllerMain : MonoBehaviour
         {
             return;
         }
+    }
+
+    // Calls when a player leaves a room (for the player only) (Button Trigger)
+    public void LeaveRoom()
+    {
+        PhotonNetwork.AutomaticallySyncScene = false;
+        PhotonNetwork.LeaveRoom(); // Notify the server that the player has left
+        SceneManager.LoadScene("MPMenu");
+    }
+
+    public override void OnLeftRoom()
+    {
+        base.OnLeftRoom();
     }
 }

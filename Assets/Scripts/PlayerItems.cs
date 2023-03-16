@@ -15,9 +15,9 @@ public class PlayerItems : MonoBehaviour
     public int heldPU2;
     public int heldPU3;
 
-    private bool canPickUp1;
-    private bool canPickUp2;
-    private bool canPickUp3;
+    public bool canPickUp1;
+    public bool canPickUp2;
+    public bool canPickUp3;
 
     public PUItem PUUse1;
     public PUItem PUUse2;
@@ -28,11 +28,21 @@ public class PlayerItems : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        PV = GetComponent<PhotonView>();
+
+        if (!PV.IsMine)
+        {
+            return;
+        }
+
+        ResetPU1();
+        ResetPU2();
+        ResetPU3();
+
         Handler = GameObject.FindGameObjectWithTag("GameController").GetComponent<GamesItemHandler>();
 
         Snake = GetComponent<PlayerController>();
 
-        ResetPU();
     }
 
     // Update is called once per frame
@@ -106,18 +116,7 @@ public class PlayerItems : MonoBehaviour
                 if (pv.ViewID == Snake.PlayerID)
                 {
                     Player player = pv.Controller;
-                    pv.RPC("RPC_ScoreChange", player, PUUse1.Value);
-                }
-            }
-        }
-        else if (PUUse1 is BoostPU)
-        {
-            foreach (PhotonView pv in PVInstances)
-            {
-                if (pv.ViewID == Snake.PlayerID)
-                {
-                    Player player = pv.Controller;
-                    pv.RPC("RPC_Boost", player, PUUse1.ActivateTime, PUUse1.Value);
+                    pv.RPC("RPC_ScoreChange", player, PUUse1.Value, PV.ViewID);
                 }
             }
         }
@@ -128,7 +127,7 @@ public class PlayerItems : MonoBehaviour
                 if (pv.ViewID == Snake.PlayerID)
                 {
                     Player player = pv.Controller;
-                    pv.RPC("RPC_LengthChange", player, PUUse1.Value);
+                    pv.RPC("RPC_LengthChange", player, PUUse1.Value, PV.ViewID);
                 }
             }
         }
@@ -139,27 +138,18 @@ public class PlayerItems : MonoBehaviour
                 if (pv.ViewID == Snake.PlayerID)
                 {
                     Player player = pv.Controller;
-                    pv.RPC("RPC_WallsChange", player, PUUse1.ActivateTime, PUUse1.Value);
+                    pv.RPC("RPC_WallsChange", player, PUUse1.ActivateTime, PUUse1.Value, PV.ViewID);
                 }
             }
         }
+
+        ResetPU1();
     }
 
     public void ActivatePU2()
     {
         List<PhotonView> PVInstances = PlayerPVScript.GetPlayerViewList();
-        if (PUUse2 is ScorePU)
-        {
-            foreach (PhotonView pv in PVInstances)
-            {
-                if (pv.ViewID == Snake.PlayerID)
-                {
-                    Player player = pv.Controller;
-                    pv.RPC("RPC_ScoreChange", player, PUUse2.Value);
-                }
-            }
-        }
-        else if (PUUse2 is BoostPU)
+        if (PUUse2 is BoostPU)
         {
             if (PUUse2.Value == 1.5f)
             {
@@ -168,38 +158,21 @@ public class PlayerItems : MonoBehaviour
                     if (pv.ViewID == Snake.PlayerID)
                     {
                         Player player = pv.Controller;
-                        pv.RPC("RPC_Boost", player, PUUse2.ActivateTime, PUUse2.Value);
+                        pv.RPC("RPC_Boost", player, PUUse2.ActivateTime, PUUse2.Value, PV.ViewID, PV.ViewID);
                     }
                 }
             }
             else
             {
-                Player player = PV.Controller;
-                PV.RPC("RPC_Boost", player, PUUse2.ActivateTime, PUUse2.Value);
-            }
-        }
-        else if (PUUse2 is LengthPU)
-        {
-            foreach (PhotonView pv in PVInstances)
-            {
-                if (pv.ViewID == Snake.PlayerID)
-                {
-                    Player player = pv.Controller;
-                    pv.RPC("RPC_LengthChange", player, PUUse2.Value);
-                }
+                StartCoroutine(Snake.Boost(PUUse2.ActivateTime, PUUse2.Value));
             }
         }
         else if (PUUse2 is WallsPU)
         {
-            foreach (PhotonView pv in PVInstances)
-            {
-                if (pv.ViewID == Snake.PlayerID)
-                {
-                    Player player = pv.Controller;
-                    pv.RPC("RPC_WallsChange", player, PUUse2.ActivateTime, PUUse2.Value);
-                }
-            }
+            StartCoroutine(Snake.WallsChange(PUUse2.ActivateTime, PUUse2.Value));
         }
+
+        ResetPU2();
     }
 
     public void ActivatePU3()
@@ -212,7 +185,7 @@ public class PlayerItems : MonoBehaviour
                 if (pv.ViewID == Snake.PlayerID)
                 {
                     Player player = pv.Controller;
-                    pv.RPC("RPC_ScoreChange", player, PUUse3.Value);
+                    pv.RPC("RPC_ScoreChange", player, PUUse3.Value, PV.ViewID);
                 }
             }
         }
@@ -223,20 +196,13 @@ public class PlayerItems : MonoBehaviour
                 if (pv.ViewID == Snake.PlayerID)
                 {
                     Player player = pv.Controller;
-                    pv.RPC("RPC_Boost", player, PUUse3.ActivateTime, PUUse3.Value);
+                    pv.RPC("RPC_Boost", player, PUUse3.ActivateTime, PUUse3.Value, PV.ViewID);
                 }
             }
         }
         else if (PUUse3 is LengthPU)
         {
-            foreach (PhotonView pv in PVInstances)
-            {
-                if (pv.ViewID == Snake.PlayerID)
-                {
-                    Player player = pv.Controller;
-                    pv.RPC("RPC_LengthChange", player, PUUse3.Value);
-                }
-            }
+            Snake.LengthChange((int)PUUse3.Value);
         }
         else if (PUUse3 is WallsPU)
         {
@@ -245,24 +211,32 @@ public class PlayerItems : MonoBehaviour
                 if (pv.ViewID == Snake.PlayerID)
                 {
                     Player player = pv.Controller;
-                    pv.RPC("RPC_WallsChange", player, PUUse3.ActivateTime, PUUse3.Value);
+                    pv.RPC("RPC_WallsChange", player, PUUse3.ActivateTime, PUUse3.Value, PV.ViewID);
                 }
             }
         }
+
+        ResetPU3();
     }
 
-    public void ResetPU()
+    public void ResetPU1()
     {
         PUUse1 = null;
-        PUUse2 = null;
-        PUUse3 = null;
-
         heldPU1 = -1;
-        heldPU2 = -1;
-        heldPU3 = -1;
-
         canPickUp1 = true;
+    }
+
+    public void ResetPU2()
+    {
+        PUUse2 = null;
+        heldPU2 = -1;
         canPickUp2 = true;
+    }
+
+    public void ResetPU3()
+    {
+        PUUse3 = null;
+        heldPU3 = -1;
         canPickUp3 = true;
     }
 
