@@ -7,6 +7,7 @@ using Photon.Realtime;
 public class PlayerPVScript : MonoBehaviour
 {
     PhotonView photonView;
+
     Transform ParentT;
     public static List<PhotonView> Instances = new List<PhotonView>();
     public static List<Transform> TransformInstances = new List<Transform>();

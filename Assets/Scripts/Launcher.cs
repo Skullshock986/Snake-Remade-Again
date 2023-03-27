@@ -5,7 +5,7 @@ using Photon.Pun;
 using TMPro;
 using Photon.Realtime;
 
-public class Launcher : MonoBehaviourPunCallbacks  // Extending the class from MonoBehaviour to allow callbacks for room creation, joining lobbies, etc
+public class Launcher : MonoBehaviourPunCallbacks  // Extending the class from MonoBehaviour to allow callbacks for creation, joining lobbies, etc
 {
     public static Launcher Instance;
 
@@ -44,7 +44,7 @@ public class Launcher : MonoBehaviourPunCallbacks  // Extending the class from M
     public override void OnJoinedLobby()
     {
         // Opens the Title menu
-        MenuManager.Instance.OpenMenu("Title");
+        MenuManager.Instance.OpenMenu("TitleScreen");
         Debug.Log("Joined the Lobby");
 
         // Assign each player a random number
@@ -70,6 +70,11 @@ public class Launcher : MonoBehaviourPunCallbacks  // Extending the class from M
         MenuManager.Instance.OpenMenu("Room");
         roomNameText.text = PhotonNetwork.CurrentRoom.Name; // Show the room menu with the Title as the Room Name
 
+        foreach (Transform child in playerListContent)
+        {
+            Destroy(child.gameObject); // Remove existing player names from menu
+        }
+
         // Make a new list of all player in the room when joining.
         Player[] players = PhotonNetwork.PlayerList;
 
@@ -78,15 +83,16 @@ public class Launcher : MonoBehaviourPunCallbacks  // Extending the class from M
             // Instantiate a card for each player in the lobby
             Instantiate(playerListItemPrefab, playerListContent).GetComponent<PlayerListItem>().SetUp(players[i]);
         }
-        
-        startGameButton.SetActive(PhotonNetwork.IsMasterClient); // Allow the Room Host to start the game when needed
+
     }
 
     // Calls when the active host leaves the lobby
     public override void OnMasterClientSwitched(Player newMasterClient)
     {
-        // Set a random player as the new host
-        startGameButton.SetActive(PhotonNetwork.IsMasterClient); 
+        if (PhotonNetwork.CurrentRoom.PlayerCount > 1)
+        {
+            startGameButton.SetActive(PhotonNetwork.IsMasterClient); // Set a random player as the new host
+        }
     }
 
     // Calls when there is an error in creating a room
@@ -105,6 +111,8 @@ public class Launcher : MonoBehaviourPunCallbacks  // Extending the class from M
     // Calls upon starting the game
     public void StartGame()
     {
+        PhotonNetwork.CurrentRoom.IsVisible = false;
+        PhotonNetwork.CurrentRoom.IsOpen = false;
         // Load the game Scene
         PhotonNetwork.LoadLevel(2);
     }
@@ -120,7 +128,7 @@ public class Launcher : MonoBehaviourPunCallbacks  // Extending the class from M
     public override void OnLeftRoom()
     {
         // Send the player to the Title Menu
-        MenuManager.Instance.OpenMenu("Title"); 
+        MenuManager.Instance.OpenMenu("MatchMaking"); 
     }
 
     // Calls when a player joins a room (local player only)
@@ -153,6 +161,34 @@ public class Launcher : MonoBehaviourPunCallbacks  // Extending the class from M
     {
         // Create a new player card and add it to the room
         Instantiate(playerListItemPrefab, playerListContent).GetComponent<PlayerListItem>().SetUp(newPlayer);
+
+        if(PhotonNetwork.CurrentRoom.PlayerCount == 4 && PhotonNetwork.IsMasterClient)
+        {
+            // If there are 4 players in a room, make the Master Client close the room to those outside the room
+            PhotonNetwork.CurrentRoom.IsVisible = false;
+            PhotonNetwork.CurrentRoom.IsOpen = false;
+        }
+        else if(PhotonNetwork.CurrentRoom.PlayerCount < 4 && PhotonNetwork.IsMasterClient)
+        {
+            PhotonNetwork.CurrentRoom.IsVisible = true;
+            PhotonNetwork.CurrentRoom.IsOpen = true;
+        }
+
+
+        if (PhotonNetwork.CurrentRoom.PlayerCount > 1)
+        {
+            startGameButton.SetActive(PhotonNetwork.IsMasterClient); // Allow the Room Host to start the game when needed
+        }
+    }
+
+    public override void OnPlayerLeftRoom(Player otherPlayer)
+    {
+        if (PhotonNetwork.CurrentRoom.PlayerCount < 4 && PhotonNetwork.IsMasterClient)
+        {
+            // If there are less than 4 players in a room, make the Master Client open the room to those outside the room
+            PhotonNetwork.CurrentRoom.IsVisible = true;
+            PhotonNetwork.CurrentRoom.IsOpen = true;
+        }
     }
 
     public void QuitGame()

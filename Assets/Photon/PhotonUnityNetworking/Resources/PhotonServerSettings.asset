@@ -55,6 +55,7 @@ MonoBehaviour:
   - RPC_LengthChange
   - RPC_PlayerDied
   - RPC_ShowKO
+  - RPC_ShowWin
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

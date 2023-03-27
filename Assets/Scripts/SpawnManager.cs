@@ -19,26 +19,14 @@ public class SpawnManager : MonoBehaviour
     void Awake()
     {
         PV = GetComponent<PhotonView>();
-        RoomPlayers = PhotonNetwork.PlayerList;
-        Instance = this;
-        Debug.Log(RoomPlayers);
-    }
-
-    public void IncrementSpawn()
-    {
-        PV.RPC("RPC_Increment", RpcTarget.All);
+        RoomPlayers = PhotonNetwork.PlayerList; // Grabs a list of all players in the room
+        Instance = this; // Makes this script a singleton
     }
 
     public Transform GetSpawnPoint(int i)
     {
+        // Output (in the debug console) and return the transform of the corresponding spawnpoint to the player calling the function
         Debug.Log(SpawnPoints[i].transform.position + " By player " + RoomPlayers[i]);
         return SpawnPoints[i].transform;
-    }
-
-    [PunRPC]
-    void RPC_Increment()
-    {
-        PlayerIndex += 1;
-        Debug.Log("Incremented to " + PlayerIndex);
     }
 }

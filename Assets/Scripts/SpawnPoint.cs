@@ -8,6 +8,6 @@ public class SpawnPoint : MonoBehaviour
 
     void Awake()
     {
-        graphics.SetActive(false); 
+        graphics.SetActive(false); // Set the graphics renderer of the Spawnpoint indicator to false
     }
 }
