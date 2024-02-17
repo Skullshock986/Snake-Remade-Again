@@ -1,3 +1,2 @@
 # Snake-Remade-Again
-I heckin love 
-Some snake game or something
+Fixed remake of Snake Multiplayer Projec
